@@ -4,38 +4,66 @@ import axios from "axios";
 import useAsync from "./useAsync";
 import User from "./User";
 
-// <1> useState, useEffect
+// <2> useReducer => 리듀서를 다른 파일에 분리를 해서 코드의 재사용성 증가
+// LOADING, SUCCESS, ERROR
+function reducer(state, action) {
+  switch (action.type) {
+    case "LOADING":
+      return {
+        loading: true,
+        data: null,
+        error: null
+      };
+
+    case "SUCCESS":
+      return {
+        loading: false,
+        data: action.data,
+        error: null
+      };
+
+    case "ERROR":
+      return {
+        loading: false,
+        data: null,
+        error: action.error
+      };
+
+    default:
+      throw new Error(`Unhandled action type: ${action.type}`);
+  }
+}
+
 function Users() {
-  const [users, setUsers] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [state, dispatch] = useReducer(reducer, {
+    loading: false,
+    data: null,
+    error: null
+  });
 
   const fetchUsers = async () => {
-    try {
-      setUsers(null); // set users null
-      setError(null); // set error null
-      setLoading(true); // start loading
+    dispatch({ type: "LOADING" });
 
-      // get users api data
+    try {
       const response = await axios.get(
-        "https://jsonplaceholder.typicode.com/users"
+        "http://jsonplaceholder.typicode.com/users"
       );
-      setUsers(response.data); // set users
+      dispatch({ type: "SUCCESS", data: response.data });
     } catch (e) {
-      console.log(e.response.status);
-      setError(e);
+      dispatch({ type: "ERROR", error: e });
     }
-    setLoading(false); // finish loading
   };
 
-  // when component first render
   useEffect(() => {
     fetchUsers();
   }, []);
 
-  if (loading) return <div>로딩중...</div>; // if still loading
-  if (error) return <div>에러 발생 !!</div>; // if error occurs
-  if (!users) return null; // if users are invalid
+  // destructuring assignment
+  const { loading, data: users, error } = state;
+
+  if (loading) return <div>로딩중...</div>;
+  if (error) return <div>에러 발생 !!</div>;
+  if (!users) return null;
 
   return (
     <>
