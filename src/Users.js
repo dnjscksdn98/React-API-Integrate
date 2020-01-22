@@ -4,7 +4,7 @@ import { useAsync } from "react-async";
 
 import User from "./User";
 
-// <3> useAsync custom hook
+// <4> useAsync from react-async library
 async function getUsers() {
   const response = await axios.get(
     "https://jsonplaceholder.typicode.com/users"
